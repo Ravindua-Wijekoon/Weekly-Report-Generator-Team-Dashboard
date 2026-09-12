@@ -110,6 +110,70 @@
           }
         }
       ]
+    },
+    {
+      "name": "Reports",
+      "item": [
+        {
+          "name": "Create Draft Report",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const body = pm.response.json();",
+                  "  pm.environment.set('reportId', body.report._id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/reports", "host": ["{{baseUrl}}"], "path": ["reports"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"project\": \"{{projectId}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "List Reports",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/reports", "host": ["{{baseUrl}}"], "path": ["reports"] }
+          }
+        },
+        {
+          "name": "Get Report",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/reports/{{reportId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["reports", "{{reportId}}"]
+            }
+          }
+        },
+        {
+          "name": "Update Report Content",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/reports/{{reportId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["reports", "{{reportId}}"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"content\": {\n    \"tasksCompleted\": [\n      {\n        \"name\": \"Build login page\",\n        \"priority\": \"high\",\n        \"plannedPercent\": 100,\n        \"actualPercent\": 100,\n        \"status\": \"completed\",\n        \"timePlannedHours\": 8,\n        \"timeSpentHours\": 10,\n        \"output\": \"Login and register pages\"\n      }\n    ],\n    \"tasksPlannedNextWeek\": [\n      { \"text\": \"Start on report CRUD\" }\n    ],\n    \"blockers\": [\n      { \"text\": \"Waiting on design review\", \"isKey\": true }\n    ],\n    \"achievements\": [\n      { \"text\": \"Finished auth end to end\", \"isKey\": true }\n    ],\n    \"hoursByType\": {\n      \"development\": 30,\n      \"testing\": 4,\n      \"meetings\": 3,\n      \"documentation\": 2\n    },\n    \"notes\": \"Nothing else to add\"\n  }\n}"
+            }
+          }
+        }
+      ]
     }
   ]
 }

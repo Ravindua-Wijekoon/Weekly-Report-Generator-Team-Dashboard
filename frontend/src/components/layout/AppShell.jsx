@@ -14,6 +14,12 @@ export function AppShell() {
             <Link to="/" className="hover:text-slate-900">
               Home
             </Link>
+            <Link to="/reports/me" className="hover:text-slate-900">
+              My Report
+            </Link>
+            <Link to="/reports/history" className="hover:text-slate-900">
+              History
+            </Link>
             {user?.role === 'manager' && (
               <Link to="/projects" className="hover:text-slate-900">
                 Projects

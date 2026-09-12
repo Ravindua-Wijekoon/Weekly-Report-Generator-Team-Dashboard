@@ -1,8 +1,16 @@
 function errorHandler(err, req, res, next) {
-  const status = err.status || 500;
-  const message = err.status ? err.message : 'Internal server error';
+  let status = err.status || 500;
+  let message = err.status ? err.message : 'Internal server error';
 
-  if (!err.status) {
+  if (err.name === 'CastError') {
+    status = 400;
+    message = 'Invalid id';
+  } else if (err.name === 'ValidationError' && !err.status) {
+    status = 400;
+    message = err.message;
+  }
+
+  if (status === 500) {
     console.error(err);
   }
 
