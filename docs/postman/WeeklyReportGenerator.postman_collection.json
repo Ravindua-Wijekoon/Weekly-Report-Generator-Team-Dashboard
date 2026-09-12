@@ -228,6 +228,162 @@
           }
         }
       ]
+    },
+    {
+      "name": "Dashboard",
+      "item": [
+        {
+          "name": "Summary",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/dashboard/summary?week=2026-09-07",
+              "host": ["{{baseUrl}}"],
+              "path": ["dashboard", "summary"],
+              "query": [{ "key": "week", "value": "2026-09-07" }]
+            }
+          }
+        },
+        {
+          "name": "Trend",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/dashboard/trend?weeks=8",
+              "host": ["{{baseUrl}}"],
+              "path": ["dashboard", "trend"],
+              "query": [{ "key": "weeks", "value": "8" }]
+            }
+          }
+        },
+        {
+          "name": "Status By Member",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/dashboard/status-by-member?week=2026-09-07",
+              "host": ["{{baseUrl}}"],
+              "path": ["dashboard", "status-by-member"],
+              "query": [{ "key": "week", "value": "2026-09-07" }]
+            }
+          }
+        },
+        {
+          "name": "Workload By Project",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/dashboard/workload-by-project?week=2026-09-07",
+              "host": ["{{baseUrl}}"],
+              "path": ["dashboard", "workload-by-project"],
+              "query": [{ "key": "week", "value": "2026-09-07" }]
+            }
+          }
+        },
+        {
+          "name": "Hours By Type",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/dashboard/hours-by-type?week=2026-09-07",
+              "host": ["{{baseUrl}}"],
+              "path": ["dashboard", "hours-by-type"],
+              "query": [{ "key": "week", "value": "2026-09-07" }]
+            }
+          }
+        },
+        {
+          "name": "Activity",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/dashboard/activity?limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["dashboard", "activity"],
+              "query": [{ "key": "limit", "value": "20" }]
+            }
+          }
+        },
+        {
+          "name": "Section (Blockers)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/dashboard/section?week=2026-09-07&section=blockers",
+              "host": ["{{baseUrl}}"],
+              "path": ["dashboard", "section"],
+              "query": [
+                { "key": "week", "value": "2026-09-07" },
+                { "key": "section", "value": "blockers" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "List Users",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/users", "host": ["{{baseUrl}}"], "path": ["users"] }
+          }
+        },
+        {
+          "name": "Invite User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const body = pm.response.json();",
+                  "  pm.environment.set('userId', body.user.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/users", "host": ["{{baseUrl}}"], "path": ["users"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"New User\",\n  \"email\": \"newuser@example.com\",\n  \"password\": \"password123\",\n  \"role\": \"member\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get User",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "{{userId}}"]
+            }
+          }
+        },
+        {
+          "name": "Update User (role/status)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "{{userId}}"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"isActive\": false\n}"
+            }
+          }
+        }
+      ]
     }
   ]
 }

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 
 import { useReports } from '../hooks/useReports'
+import { useUser } from '../hooks/useUsers'
 import { StatusBadge } from '../components/common/StatusBadge'
 import { Pagination } from '../components/common/Pagination'
 
@@ -22,19 +23,20 @@ const STATUS_LABELS = {
 export default function TeamMemberProfilePage() {
   const { userId } = useParams()
   const [page, setPage] = useState(1)
+  const { data: member } = useUser(userId)
   const { data, isLoading } = useReports({ owner: userId, page, limit: 10, sort: '-weekStart' })
 
   const reports = data?.data || []
   const meta = data?.meta
-  const memberName = reports[0]?.owner?.name || 'Team member'
+  const memberName = member?.name || 'Team member'
 
   const approvedCount = reports.filter((report) => report.status === 'approved').length
   const needsCorrectionCount = reports.filter((report) => report.status === 'needs_correction').length
 
   return (
     <div>
-      <h1 className="text-xl font-semibold text-slate-800 mb-2">{memberName}</h1>
-      <p className="text-sm text-slate-500 mb-6">Full report history</p>
+      <h1 className="text-xl font-semibold text-slate-800 mb-1">{memberName}</h1>
+      <p className="text-sm text-slate-500 mb-6">{member?.email || 'Full report history'}</p>
 
       <div className="grid grid-cols-3 gap-4 mb-6">
         <div className="bg-white rounded-lg shadow p-4">

@@ -9,6 +9,7 @@ import ReportDetailPage from '../pages/ReportDetailPage'
 import ProjectManagementPage from '../pages/ProjectManagementPage'
 import TeamDashboardPage from '../pages/TeamDashboardPage'
 import TeamMemberProfilePage from '../pages/TeamMemberProfilePage'
+import UserManagementPage from '../pages/UserManagementPage'
 import { ProtectedRoute } from '../components/layout/ProtectedRoute'
 import { AppShell } from '../components/layout/AppShell'
 
@@ -31,6 +32,7 @@ export const router = createBrowserRouter([
               { path: '/projects', element: <ProjectManagementPage /> },
               { path: '/dashboard', element: <TeamDashboardPage /> },
               { path: '/team/:userId', element: <TeamMemberProfilePage /> },
+              { path: '/users', element: <UserManagementPage /> },
             ],
           },
         ],

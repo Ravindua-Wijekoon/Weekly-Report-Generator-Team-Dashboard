@@ -43,4 +43,17 @@ function requireReportOwner(req, res, next) {
   next();
 }
 
-module.exports = { requireRole, loadReport, requireReportOwnerOrManager, requireReportOwner };
+function requireSelfOrManager(req, res, next) {
+  if (req.user.role === 'manager' || req.params.id === req.user.id) {
+    return next();
+  }
+  return res.status(403).json({ error: 'Forbidden' });
+}
+
+module.exports = {
+  requireRole,
+  loadReport,
+  requireReportOwnerOrManager,
+  requireReportOwner,
+  requireSelfOrManager,
+};

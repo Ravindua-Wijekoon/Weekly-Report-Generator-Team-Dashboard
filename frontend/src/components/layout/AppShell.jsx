@@ -28,6 +28,9 @@ export function AppShell() {
                 <Link to="/projects" className="hover:text-slate-900">
                   Projects
                 </Link>
+                <Link to="/users" className="hover:text-slate-900">
+                  Users
+                </Link>
               </>
             )}
           </nav>
