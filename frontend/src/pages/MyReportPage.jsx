@@ -1,11 +1,28 @@
 import { useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 
-import { useCreateReport, useReports, useUpdateReport } from '../hooks/useReports'
+import { useCreateReport, useReports, useSubmitReport, useUpdateReport } from '../hooks/useReports'
 import { useProjects } from '../hooks/useProjects'
 import { getWeekStart, getWeekEnd, toISODateString, formatWeekRange } from '../lib/week'
 import { ReportForm } from '../components/report/ReportForm'
 import { Button } from '../components/common/Button'
+import { StatusBadge } from '../components/common/StatusBadge'
+
+const STATUS_TONES = {
+  draft: 'neutral',
+  submitted: 'info',
+  needs_correction: 'warning',
+  approved: 'success',
+}
+
+const STATUS_LABELS = {
+  draft: 'Draft',
+  submitted: 'Submitted',
+  needs_correction: 'Needs correction',
+  approved: 'Approved',
+}
+
+const EDITABLE_STATUSES = ['draft', 'needs_correction']
 
 export default function MyReportPage() {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -24,8 +41,10 @@ export default function MyReportPage() {
   })
   const createReport = useCreateReport()
   const updateReport = useUpdateReport()
+  const submitReport = useSubmitReport()
 
   const existingReport = reportsData?.data?.[0]
+  const isEditable = existingReport ? EDITABLE_STATUSES.includes(existingReport.status) : false
 
   function goToWeek(date) {
     setSearchParams({ week: toISODateString(date) })
@@ -51,6 +70,10 @@ export default function MyReportPage() {
     await updateReport.mutateAsync({ id: existingReport._id, payload })
   }
 
+  async function handleSubmit() {
+    await submitReport.mutateAsync(existingReport._id)
+  }
+
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
@@ -72,14 +95,34 @@ export default function MyReportPage() {
         <StartReportPanel projects={projects} onCreate={handleCreate} isSubmitting={createReport.isPending} />
       )}
 
-      {!isLoading && existingReport && (
+      {!isLoading && existingReport && isEditable && (
         <ReportForm
           key={existingReport._id}
           report={existingReport}
           projects={projects}
           onSave={handleSave}
           isSaving={updateReport.isPending}
+          onSubmit={handleSubmit}
+          isSubmitting={submitReport.isPending}
         />
+      )}
+
+      {!isLoading && existingReport && !isEditable && (
+        <div className="bg-white rounded-lg shadow p-6 flex items-center justify-between">
+          <div>
+            <p className="text-slate-600">
+              This week's report is no longer editable here.
+            </p>
+            <div className="mt-2">
+              <StatusBadge tone={STATUS_TONES[existingReport.status]}>
+                {STATUS_LABELS[existingReport.status]}
+              </StatusBadge>
+            </div>
+          </div>
+          <Link to={`/reports/${existingReport._id}`} className="text-primary-600 hover:underline text-sm">
+            View report
+          </Link>
+        </div>
       )}
     </div>
   )

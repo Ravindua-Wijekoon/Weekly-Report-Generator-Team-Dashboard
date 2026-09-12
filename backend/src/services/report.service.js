@@ -81,4 +81,67 @@ async function updateContent(report, updates) {
   return report;
 }
 
-module.exports = { createDraft, listReports, updateContent };
+async function submitReport(report) {
+  if (!['draft', 'needs_correction'].includes(report.status)) {
+    const error = new Error('Report cannot be submitted in its current status');
+    error.status = 409;
+    throw error;
+  }
+
+  if (report.status === 'needs_correction') {
+    report.currentVersionNumber += 1;
+  }
+
+  report.versions.push({
+    versionNumber: report.currentVersionNumber,
+    content: report.content,
+    savedAt: new Date(),
+  });
+
+  report.status = 'submitted';
+  report.submittedAt = new Date();
+
+  await report.save();
+  return report;
+}
+
+const ACTION_TO_STATUS = {
+  approve: 'approved',
+  request_changes: 'needs_correction',
+};
+
+const ACTION_TO_COMMENT_ACTION = {
+  approve: 'approved',
+  request_changes: 'requested_changes',
+};
+
+async function reviewReport(report, reviewerId, { action, comment }) {
+  if (report.status !== 'submitted') {
+    const error = new Error('Report is not awaiting review');
+    error.status = 409;
+    throw error;
+  }
+
+  const createdAt = new Date();
+  const commentAction = ACTION_TO_COMMENT_ACTION[action];
+
+  report.reviewComments.push({
+    action: commentAction,
+    comment,
+    reviewer: reviewerId,
+    targetVersionNumber: report.currentVersionNumber,
+    createdAt,
+  });
+
+  report.latestComment = { action: commentAction, comment, reviewer: reviewerId, createdAt };
+  report.status = ACTION_TO_STATUS[action];
+
+  if (action === 'approve') {
+    report.approvedAt = createdAt;
+  }
+
+  await report.save();
+  return report;
+}
+
+module.exports = { createDraft, listReports, updateContent, submitReport, reviewReport };

@@ -1,9 +1,18 @@
 const express = require('express');
 
 const { requireAuth } = require('../middleware/auth');
-const { loadReport, requireReportOwner, requireReportOwnerOrManager } = require('../middleware/rbac');
+const {
+  loadReport,
+  requireReportOwner,
+  requireReportOwnerOrManager,
+  requireRole,
+} = require('../middleware/rbac');
 const { validate } = require('../middleware/validate');
-const { createReportSchema, updateReportSchema } = require('../validators/report.validator');
+const {
+  createReportSchema,
+  updateReportSchema,
+  reviewActionSchema,
+} = require('../validators/report.validator');
 const reportController = require('../controllers/report.controller');
 
 const router = express.Router();
@@ -20,5 +29,14 @@ router.patch(
   requireReportOwner,
   reportController.update
 );
+router.post('/:id/submit', loadReport, requireReportOwner, reportController.submit);
+router.post(
+  '/:id/review',
+  validate(reviewActionSchema),
+  requireRole('manager'),
+  loadReport,
+  reportController.review
+);
+router.get('/:id/versions', loadReport, requireReportOwnerOrManager, reportController.getVersions);
 
 module.exports = router;

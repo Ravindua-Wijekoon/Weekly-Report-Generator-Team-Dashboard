@@ -45,4 +45,14 @@ const updateReportSchema = z.object({
   content: reportContentSchema.optional(),
 });
 
-module.exports = { createReportSchema, updateReportSchema, reportContentSchema };
+const reviewActionSchema = z
+  .object({
+    action: z.enum(['approve', 'request_changes']),
+    comment: z.string().trim().optional(),
+  })
+  .refine((data) => data.action !== 'request_changes' || Boolean(data.comment), {
+    message: 'A comment is required when requesting changes',
+    path: ['comment'],
+  });
+
+module.exports = { createReportSchema, updateReportSchema, reviewActionSchema, reportContentSchema };

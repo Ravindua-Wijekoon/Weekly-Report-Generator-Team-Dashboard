@@ -38,4 +38,21 @@ async function update(req, res) {
   res.json({ report });
 }
 
-module.exports = { list, create, getOne, update };
+async function submit(req, res) {
+  const report = await reportService.submitReport(req.report);
+  res.json({ report });
+}
+
+async function review(req, res) {
+  const report = await reportService.reviewReport(req.report, req.user.id, req.body);
+  res.json({ report });
+}
+
+function getVersions(req, res) {
+  res.json({
+    versions: req.report.versions,
+    reviewComments: req.report.reviewComments,
+  });
+}
+
+module.exports = { list, create, getOne, update, submit, review, getVersions };

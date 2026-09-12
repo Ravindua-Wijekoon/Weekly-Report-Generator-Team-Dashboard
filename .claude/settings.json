@@ -12,7 +12,10 @@
       "Bash(curl -s -b cookies.txt \"http://localhost:4000/api/reports?mine=true\")",
       "Bash(curl -s -b cookies.txt \"http://localhost:4000/api/reports\")",
       "Bash(curl -s -i -b cookies-member2.txt -X POST http://localhost:4000/api/reports -H 'Content-Type: application/json' -d '{\"project\":\"6aa5829eeb79bdd4e67f585d\"}')",
-      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\('total:', d['meta']['total']\\); print\\([r['owner']['email'] for r in d['data']]\\)\")"
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\('total:', d['meta']['total']\\); print\\([r['owner']['email'] for r in d['data']]\\)\")",
+      "Bash(curl -s -i -b cookies-member2.txt -X PATCH http://localhost:4000/api/reports/6aa58539af004bc2e0601fe9 -H \"Content-Type: application/json\" -d '{\"content\":{\"notes\":\"sneaky edit\"}}')",
+      "Bash(curl -s -i -b cookies.txt -X POST http://localhost:4000/api/reports/6aa58539af004bc2e0601fe9/submit)",
+      "Bash(curl -s -i -b cookies-member2.txt -X POST http://localhost:4000/api/reports/6aa58539af004bc2e0601fe9/review -H \"Content-Type: application/json\" -d '{\"action\":\"approve\"}')"
     ]
   }
 }

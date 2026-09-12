@@ -32,7 +32,7 @@ function toFormState(report) {
   }
 }
 
-export function ReportForm({ report, projects, onSave, isSaving }) {
+export function ReportForm({ report, projects, onSave, isSaving, onSubmit, isSubmitting }) {
   const [form, setForm] = useState(() => toFormState(report))
   const isEditable = report.status === 'draft' || report.status === 'needs_correction'
 
@@ -141,9 +141,19 @@ export function ReportForm({ report, projects, onSave, isSaving }) {
       </section>
 
       {isEditable && (
-        <Button onClick={handleSave} disabled={isSaving} className="px-4">
-          {isSaving ? 'Saving...' : 'Save draft'}
-        </Button>
+        <div className="flex gap-3">
+          <Button onClick={handleSave} disabled={isSaving || isSubmitting} className="px-4">
+            {isSaving ? 'Saving...' : 'Save draft'}
+          </Button>
+          <button
+            type="button"
+            onClick={onSubmit}
+            disabled={isSaving || isSubmitting}
+            className="px-4 py-2 text-sm font-medium rounded border border-primary-300 text-primary-700 hover:bg-primary-50 disabled:opacity-50"
+          >
+            {isSubmitting ? 'Submitting...' : 'Submit for review'}
+          </button>
+        </div>
       )}
     </div>
   )

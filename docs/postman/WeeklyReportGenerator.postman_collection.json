@@ -172,6 +172,60 @@
               "raw": "{\n  \"content\": {\n    \"tasksCompleted\": [\n      {\n        \"name\": \"Build login page\",\n        \"priority\": \"high\",\n        \"plannedPercent\": 100,\n        \"actualPercent\": 100,\n        \"status\": \"completed\",\n        \"timePlannedHours\": 8,\n        \"timeSpentHours\": 10,\n        \"output\": \"Login and register pages\"\n      }\n    ],\n    \"tasksPlannedNextWeek\": [\n      { \"text\": \"Start on report CRUD\" }\n    ],\n    \"blockers\": [\n      { \"text\": \"Waiting on design review\", \"isKey\": true }\n    ],\n    \"achievements\": [\n      { \"text\": \"Finished auth end to end\", \"isKey\": true }\n    ],\n    \"hoursByType\": {\n      \"development\": 30,\n      \"testing\": 4,\n      \"meetings\": 3,\n      \"documentation\": 2\n    },\n    \"notes\": \"Nothing else to add\"\n  }\n}"
             }
           }
+        },
+        {
+          "name": "Submit Report",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/reports/{{reportId}}/submit",
+              "host": ["{{baseUrl}}"],
+              "path": ["reports", "{{reportId}}", "submit"]
+            }
+          }
+        },
+        {
+          "name": "Review Report (Approve)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/reports/{{reportId}}/review",
+              "host": ["{{baseUrl}}"],
+              "path": ["reports", "{{reportId}}", "review"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"approve\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Review Report (Request Changes)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/reports/{{reportId}}/review",
+              "host": ["{{baseUrl}}"],
+              "path": ["reports", "{{reportId}}", "review"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"request_changes\",\n  \"comment\": \"Please add more detail on tasks completed\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Report Versions",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/reports/{{reportId}}/versions",
+              "host": ["{{baseUrl}}"],
+              "path": ["reports", "{{reportId}}", "versions"]
+            }
+          }
         }
       ]
     }

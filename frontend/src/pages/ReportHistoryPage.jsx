@@ -4,7 +4,6 @@ import { Link } from 'react-router-dom'
 import { useReports } from '../hooks/useReports'
 import { StatusBadge } from '../components/common/StatusBadge'
 import { Pagination } from '../components/common/Pagination'
-import { toISODateString } from '../lib/week'
 
 const STATUS_TONES = {
   draft: 'neutral',
@@ -58,10 +57,7 @@ export default function ReportHistoryPage() {
                     <StatusBadge tone={STATUS_TONES[report.status]}>{STATUS_LABELS[report.status]}</StatusBadge>
                   </td>
                   <td className="py-2 pr-4">
-                    <Link
-                      to={`/reports/me?week=${toISODateString(new Date(report.weekStart))}`}
-                      className="text-primary-600 hover:underline"
-                    >
+                    <Link to={`/reports/${report._id}`} className="text-primary-600 hover:underline">
                       Open
                     </Link>
                   </td>
