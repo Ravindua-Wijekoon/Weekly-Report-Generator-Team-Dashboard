@@ -7,6 +7,8 @@ import MyReportPage from '../pages/MyReportPage'
 import ReportHistoryPage from '../pages/ReportHistoryPage'
 import ReportDetailPage from '../pages/ReportDetailPage'
 import ProjectManagementPage from '../pages/ProjectManagementPage'
+import TeamDashboardPage from '../pages/TeamDashboardPage'
+import TeamMemberProfilePage from '../pages/TeamMemberProfilePage'
 import { ProtectedRoute } from '../components/layout/ProtectedRoute'
 import { AppShell } from '../components/layout/AppShell'
 
@@ -25,7 +27,11 @@ export const router = createBrowserRouter([
           { path: '/reports/:id', element: <ReportDetailPage /> },
           {
             element: <ProtectedRoute roles={['manager']} />,
-            children: [{ path: '/projects', element: <ProjectManagementPage /> }],
+            children: [
+              { path: '/projects', element: <ProjectManagementPage /> },
+              { path: '/dashboard', element: <TeamDashboardPage /> },
+              { path: '/team/:userId', element: <TeamMemberProfilePage /> },
+            ],
           },
         ],
       },
