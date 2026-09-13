@@ -4,10 +4,11 @@ import * as reportsApi from '../api/reports.api'
 
 const REPORTS_KEY = ['reports']
 
-export function useReports(params) {
+export function useReports(params, options = {}) {
   return useQuery({
     queryKey: [...REPORTS_KEY, params],
     queryFn: () => reportsApi.listReports(params),
+    ...options,
   })
 }
 

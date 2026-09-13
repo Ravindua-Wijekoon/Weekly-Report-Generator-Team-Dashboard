@@ -11,6 +11,14 @@ async function createManager({ name, email, password }) {
   return User.create({ name, email, passwordHash, role: 'manager' });
 }
 
+function minimalContent(overrides = {}) {
+  return {
+    tasksCompleted: [{ name: 'Write tests', priority: 'medium', status: 'completed' }],
+    tasksPlannedNextWeek: [{ task: 'Ship the feature' }],
+    ...overrides,
+  };
+}
+
 describe('Report RBAC', () => {
   let memberAAgent;
   let memberBAgent;
@@ -72,6 +80,7 @@ describe('Report RBAC', () => {
   test('a member cannot review their own report even though they own it', async () => {
     const createRes = await memberAAgent.post('/api/reports').send({ project: project._id.toString() });
     const reportId = createRes.body.report._id;
+    await memberAAgent.patch(`/api/reports/${reportId}`).send({ content: minimalContent() });
     await memberAAgent.post(`/api/reports/${reportId}/submit`);
 
     const reviewRes = await memberAAgent.post(`/api/reports/${reportId}/review`).send({ action: 'approve' });
@@ -91,20 +100,41 @@ describe('Report RBAC', () => {
     expect(res.body.data[0].owner._id).not.toBe(memberBId);
   });
 
-  test('manager sees reports from all members', async () => {
-    await memberAAgent.post('/api/reports').send({ project: project._id.toString() });
-    await memberBAgent.post('/api/reports').send({ project: project._id.toString() });
+  test("manager does not see other members' drafts, but sees them once submitted", async () => {
+    const createA = await memberAAgent.post('/api/reports').send({ project: project._id.toString() });
+    const createB = await memberBAgent.post('/api/reports').send({ project: project._id.toString() });
 
-    const res = await managerAgent.get('/api/reports');
-    expect(res.status).toBe(200);
-    expect(res.body.meta.total).toBe(2);
+    const draftRes = await managerAgent.get('/api/reports');
+    expect(draftRes.status).toBe(200);
+    expect(draftRes.body.meta.total).toBe(0);
+
+    await memberAAgent
+      .patch(`/api/reports/${createA.body.report._id}`)
+      .send({ content: minimalContent() });
+    await memberAAgent.post(`/api/reports/${createA.body.report._id}/submit`);
+    await memberBAgent
+      .patch(`/api/reports/${createB.body.report._id}`)
+      .send({ content: minimalContent() });
+    await memberBAgent.post(`/api/reports/${createB.body.report._id}/submit`);
+
+    const submittedRes = await managerAgent.get('/api/reports');
+    expect(submittedRes.status).toBe(200);
+    expect(submittedRes.body.meta.total).toBe(2);
+  });
+
+  test("manager cannot open another member's draft report directly", async () => {
+    const createRes = await memberAAgent.post('/api/reports').send({ project: project._id.toString() });
+    const reportId = createRes.body.report._id;
+
+    const res = await managerAgent.get(`/api/reports/${reportId}`);
+    expect(res.status).toBe(403);
   });
 
   test('manager request_changes is tagged to the correct version and cannot smuggle content', async () => {
     const createRes = await memberAAgent.post('/api/reports').send({ project: project._id.toString() });
     const reportId = createRes.body.report._id;
 
-    await memberAAgent.patch(`/api/reports/${reportId}`).send({ content: { notes: 'original notes' } });
+    await memberAAgent.patch(`/api/reports/${reportId}`).send({ content: minimalContent({ notes: 'original notes' }) });
     await memberAAgent.post(`/api/reports/${reportId}/submit`);
 
     const reviewRes = await managerAgent
@@ -123,6 +153,7 @@ describe('Report RBAC', () => {
   test('cannot edit while submitted; resubmitting after needs_correction produces a second version', async () => {
     const createRes = await memberAAgent.post('/api/reports').send({ project: project._id.toString() });
     const reportId = createRes.body.report._id;
+    await memberAAgent.patch(`/api/reports/${reportId}`).send({ content: minimalContent() });
     await memberAAgent.post(`/api/reports/${reportId}/submit`);
 
     const editWhileSubmitted = await memberAAgent.patch(`/api/reports/${reportId}`).send({ content: { notes: 'nope' } });
@@ -130,7 +161,7 @@ describe('Report RBAC', () => {
 
     await managerAgent.post(`/api/reports/${reportId}/review`).send({ action: 'request_changes', comment: 'fix it' });
 
-    const editRes = await memberAAgent.patch(`/api/reports/${reportId}`).send({ content: { notes: 'fixed' } });
+    const editRes = await memberAAgent.patch(`/api/reports/${reportId}`).send({ content: minimalContent({ notes: 'fixed' }) });
     expect(editRes.status).toBe(200);
 
     const resubmitRes = await memberAAgent.post(`/api/reports/${reportId}/submit`);
@@ -150,6 +181,7 @@ describe('Report RBAC', () => {
   test('a report is fully locked once approved', async () => {
     const createRes = await memberAAgent.post('/api/reports').send({ project: project._id.toString() });
     const reportId = createRes.body.report._id;
+    await memberAAgent.patch(`/api/reports/${reportId}`).send({ content: minimalContent() });
     await memberAAgent.post(`/api/reports/${reportId}/submit`);
     await managerAgent.post(`/api/reports/${reportId}/review`).send({ action: 'approve' });
 

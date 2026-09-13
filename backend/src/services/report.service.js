@@ -4,9 +4,9 @@ const { resolveWeek } = require('../utils/isoWeek');
 async function createDraft({ owner, project, weekStart: weekStartInput }) {
   const { weekStart, weekEnd, weekLabel } = resolveWeek(weekStartInput);
 
-  const existing = await Report.findOne({ owner, weekLabel });
+  const existing = await Report.findOne({ owner, weekLabel, project });
   if (existing) {
-    const error = new Error('A report already exists for this week');
+    const error = new Error('A report already exists for this project and week');
     error.status = 409;
     throw error;
   }
@@ -33,6 +33,8 @@ async function listReports({
   page = 1,
   limit = 20,
   sort = '-updatedAt',
+  requesterId,
+  requesterRole,
 }) {
   const filter = {};
   if (owner) filter.owner = owner;
@@ -42,6 +44,12 @@ async function listReports({
     filter.weekStart = {};
     if (weekStart) filter.weekStart.$gte = new Date(weekStart);
     if (weekEnd) filter.weekStart.$lte = new Date(weekEnd);
+  }
+
+  // Drafts are private to their owner. A manager browsing other members' reports
+  // should never see someone else's draft, only their own if they happen to own one.
+  if (requesterRole === 'manager') {
+    filter.$or = [{ status: { $ne: 'draft' } }, { owner: requesterId }];
   }
 
   const skip = (page - 1) * limit;
@@ -70,7 +78,18 @@ async function updateContent(report, updates) {
     throw error;
   }
 
-  if (updates.project) {
+  const currentProjectId = (report.project._id || report.project).toString();
+  if (updates.project && updates.project !== currentProjectId) {
+    const existing = await Report.findOne({
+      owner: report.owner,
+      weekLabel: report.weekLabel,
+      project: updates.project,
+    });
+    if (existing) {
+      const error = new Error('A report for this project and week already exists');
+      error.status = 409;
+      throw error;
+    }
     report.project = updates.project;
   }
   if (updates.content) {
@@ -81,12 +100,33 @@ async function updateContent(report, updates) {
   return report;
 }
 
+function validateReportComplete(report) {
+  const missing = [];
+  const hasCompletedTask = (report.content.tasksCompleted || []).some((task) => task.name && task.name.trim());
+  const hasPlannedTask = (report.content.tasksPlannedNextWeek || []).some((task) => task.task && task.task.trim());
+
+  if (!hasCompletedTask) {
+    missing.push('at least one completed task');
+  }
+  if (!hasPlannedTask) {
+    missing.push('at least one task planned for next week');
+  }
+
+  if (missing.length > 0) {
+    const error = new Error(`Add ${missing.join(' and ')} before submitting`);
+    error.status = 400;
+    throw error;
+  }
+}
+
 async function submitReport(report) {
   if (!['draft', 'needs_correction'].includes(report.status)) {
     const error = new Error('Report cannot be submitted in its current status');
     error.status = 409;
     throw error;
   }
+
+  validateReportComplete(report);
 
   if (report.status === 'needs_correction') {
     report.currentVersionNumber += 1;

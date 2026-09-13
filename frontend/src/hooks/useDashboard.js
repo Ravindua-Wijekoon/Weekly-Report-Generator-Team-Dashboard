@@ -2,8 +2,12 @@ import { useQuery } from '@tanstack/react-query'
 
 import * as dashboardApi from '../api/dashboard.api'
 
-export function useDashboardSummary(week) {
-  return useQuery({ queryKey: ['dashboard', 'summary', week], queryFn: () => dashboardApi.getSummary(week) })
+export function useDashboardSummary(week, options = {}) {
+  return useQuery({
+    queryKey: ['dashboard', 'summary', week],
+    queryFn: () => dashboardApi.getSummary(week),
+    ...options,
+  })
 }
 
 export function useDashboardTrend(params) {

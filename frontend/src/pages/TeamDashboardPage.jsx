@@ -19,6 +19,18 @@ import { HoursByTypeChart } from '../components/dashboard/HoursByTypeChart'
 import { ActivityFeed } from '../components/dashboard/ActivityFeed'
 import { SectionAcrossTeam } from '../components/dashboard/SectionAcrossTeam'
 import { StatusBadge } from '../components/common/StatusBadge'
+import { SegmentedControl } from '../components/common/SegmentedControl'
+import { Card } from '../components/common/Card'
+import { WeekNavigator } from '../components/common/WeekNavigator'
+
+const STATUS_FILTER_OPTIONS = [
+  { value: '', label: 'All' },
+  { value: 'not_started', label: 'Not started' },
+  { value: 'draft', label: 'Draft' },
+  { value: 'submitted', label: 'Submitted' },
+  { value: 'needs_correction', label: 'Needs correction' },
+  { value: 'approved', label: 'Approved' },
+]
 
 const STATUS_TONES = {
   not_started: 'neutral',
@@ -66,33 +78,39 @@ export default function TeamDashboardPage() {
     setAnchorDate(next)
   }
 
-  const filteredMembers = statusByMember.filter((member) => {
-    if (memberFilter && member.userId !== memberFilter) return false
-    if (statusFilter && member.status !== statusFilter) return false
-    if (projectFilter && member.project?._id !== projectFilter) return false
+  const memberRows = statusByMember.flatMap((member) => {
+    if (member.reports.length === 0) {
+      return [{ key: member.userId, userId: member.userId, name: member.name, status: 'not_started', project: null, reportId: null }]
+    }
+    return member.reports.map((report) => ({
+      key: report.reportId,
+      userId: member.userId,
+      name: member.name,
+      status: report.status,
+      project: report.project,
+      reportId: report.reportId,
+    }))
+  })
+
+  const filteredMembers = memberRows.filter((row) => {
+    if (memberFilter && row.userId !== memberFilter) return false
+    if (statusFilter && row.status !== statusFilter) return false
+    if (projectFilter && row.project?._id !== projectFilter) return false
     return true
   })
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold text-slate-800">Team dashboard</h1>
-        <div className="flex items-center gap-3 text-sm">
-          <button type="button" onClick={goToPreviousWeek} className="text-primary-600 hover:underline">
-            Previous week
-          </button>
-          <span className="text-slate-500">{formatWeekRange(weekStart, weekEnd)}</span>
-          <button type="button" onClick={goToNextWeek} className="text-primary-600 hover:underline">
-            Next week
-          </button>
-        </div>
+        <h1 className="font-serif text-2xl text-slate-900">Team dashboard</h1>
+        <WeekNavigator label={formatWeekRange(weekStart, weekEnd)} onPrevious={goToPreviousWeek} onNext={goToNextWeek} />
       </div>
 
       <SummaryCards summary={summary} />
 
       <div className="grid sm:grid-cols-2 gap-4">
         <TrendChart data={trend} />
-        <StatusByMemberChart members={statusByMember} />
+        <StatusByMemberChart members={memberRows} />
         <WorkloadByProjectChart data={workload} />
         <HoursByTypeChart hours={hoursByType} />
       </div>
@@ -101,10 +119,10 @@ export default function TeamDashboardPage() {
 
       <SectionAcrossTeam week={weekParam} />
 
-      <div className="bg-white rounded-lg shadow p-4">
-        <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+      <Card>
+        <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
           <h2 className="text-sm font-semibold text-slate-700">Team members this week</h2>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <select
               value={memberFilter}
               onChange={(event) => setMemberFilter(event.target.value)}
@@ -129,19 +147,11 @@ export default function TeamDashboardPage() {
                 </option>
               ))}
             </select>
-            <select
-              value={statusFilter}
-              onChange={(event) => setStatusFilter(event.target.value)}
-              className="rounded border border-slate-300 px-2 py-1 text-sm"
-            >
-              <option value="">All statuses</option>
-              {Object.keys(STATUS_LABELS).map((status) => (
-                <option key={status} value={status}>
-                  {STATUS_LABELS[status]}
-                </option>
-              ))}
-            </select>
           </div>
+        </div>
+
+        <div className="mb-4">
+          <SegmentedControl options={STATUS_FILTER_OPTIONS} value={statusFilter} onChange={setStatusFilter} />
         </div>
 
         {filteredMembers.length === 0 && (
@@ -151,27 +161,27 @@ export default function TeamDashboardPage() {
         {filteredMembers.length > 0 && (
           <table className="w-full text-sm text-left">
             <thead>
-              <tr className="text-slate-500 border-b border-slate-200">
-                <th className="py-2 pr-4 font-medium">Member</th>
-                <th className="py-2 pr-4 font-medium">Project</th>
-                <th className="py-2 pr-4 font-medium">Status</th>
-                <th className="py-2 pr-4 font-medium" />
+              <tr className="bg-slate-50 text-slate-500 text-xs uppercase tracking-wide">
+                <th className="py-2 px-3 font-semibold">Member</th>
+                <th className="py-2 px-3 font-semibold">Project</th>
+                <th className="py-2 px-3 font-semibold">Status</th>
+                <th className="py-2 px-3 font-semibold" />
               </tr>
             </thead>
             <tbody>
-              {filteredMembers.map((member) => (
-                <tr key={member.userId} className="border-t border-slate-200">
-                  <td className="py-2 pr-4 text-slate-800">{member.name}</td>
-                  <td className="py-2 pr-4 text-slate-500">{member.project?.name || '-'}</td>
-                  <td className="py-2 pr-4">
-                    <StatusBadge tone={STATUS_TONES[member.status]}>{STATUS_LABELS[member.status]}</StatusBadge>
+              {filteredMembers.map((row) => (
+                <tr key={row.key} className="border-t border-slate-200">
+                  <td className="py-2 px-3 text-slate-800">{row.name}</td>
+                  <td className="py-2 px-3 text-slate-500">{row.project?.name || '-'}</td>
+                  <td className="py-2 px-3">
+                    <StatusBadge tone={STATUS_TONES[row.status]}>{STATUS_LABELS[row.status]}</StatusBadge>
                   </td>
-                  <td className="py-2 pr-4 space-x-3 whitespace-nowrap">
-                    <Link to={`/team/${member.userId}`} className="text-primary-600 hover:underline">
+                  <td className="py-2 px-3 space-x-3 whitespace-nowrap">
+                    <Link to={`/team/${row.userId}`} className="text-primary-600 hover:underline">
                       Profile
                     </Link>
-                    {member.reportId && (
-                      <Link to={`/reports/${member.reportId}`} className="text-primary-600 hover:underline">
+                    {row.reportId && row.status !== 'draft' && (
+                      <Link to={`/reports/${row.reportId}`} className="text-primary-600 hover:underline">
                         Open report
                       </Link>
                     )}
@@ -181,7 +191,7 @@ export default function TeamDashboardPage() {
             </tbody>
           </table>
         )}
-      </div>
+      </Card>
     </div>
   )
 }

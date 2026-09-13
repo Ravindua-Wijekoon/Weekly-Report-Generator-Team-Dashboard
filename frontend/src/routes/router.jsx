@@ -10,6 +10,7 @@ import ProjectManagementPage from '../pages/ProjectManagementPage'
 import TeamDashboardPage from '../pages/TeamDashboardPage'
 import TeamMemberProfilePage from '../pages/TeamMemberProfilePage'
 import UserManagementPage from '../pages/UserManagementPage'
+import ReviewQueuePage from '../pages/ReviewQueuePage'
 import { ProtectedRoute } from '../components/layout/ProtectedRoute'
 import { AppShell } from '../components/layout/AppShell'
 
@@ -31,6 +32,7 @@ export const router = createBrowserRouter([
             children: [
               { path: '/projects', element: <ProjectManagementPage /> },
               { path: '/dashboard', element: <TeamDashboardPage /> },
+              { path: '/reviews', element: <ReviewQueuePage /> },
               { path: '/team/:userId', element: <TeamMemberProfilePage /> },
               { path: '/users', element: <UserManagementPage /> },
             ],

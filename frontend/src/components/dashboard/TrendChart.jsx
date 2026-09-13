@@ -10,7 +10,7 @@ export function TrendChart({ data }) {
           <XAxis dataKey="weekLabel" tick={{ fontSize: 12 }} />
           <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
           <Tooltip />
-          <Line type="monotone" dataKey="tasksCompleted" stroke="#2563eb" strokeWidth={2} />
+          <Line type="monotone" dataKey="tasksCompleted" stroke="#7c3aed" strokeWidth={2} />
         </LineChart>
       </ResponsiveContainer>
     </div>

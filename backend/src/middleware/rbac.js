@@ -26,11 +26,13 @@ function requireReportOwnerOrManager(req, res, next) {
   const isOwner = req.report.owner._id.toString() === req.user.id;
   const isManager = req.user.role === 'manager';
 
-  if (!isOwner && !isManager) {
-    return res.status(403).json({ error: 'Forbidden' });
+  // Drafts are private to their owner, a manager may not view another
+  // member's draft even though they can view everything once submitted.
+  if (isOwner || (isManager && req.report.status !== 'draft')) {
+    return next();
   }
 
-  next();
+  return res.status(403).json({ error: 'Forbidden' });
 }
 
 function requireReportOwner(req, res, next) {

@@ -74,7 +74,10 @@ function buildContent() {
     };
   });
 
-  const tasksPlannedNextWeek = Array.from({ length: randomInt(1, 3) }, () => ({ text: pick(TASK_NAMES) }));
+  const tasksPlannedNextWeek = Array.from({ length: randomInt(1, 3) }, () => ({
+    task: pick(TASK_NAMES),
+    description: 'Continue building on this week\'s progress.',
+  }));
 
   const blockers = Array.from({ length: randomInt(1, 2) }, (_, i) => ({
     text: pick(BLOCKER_TEXTS),

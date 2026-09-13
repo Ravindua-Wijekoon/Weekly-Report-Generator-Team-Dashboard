@@ -19,6 +19,8 @@ async function list(req, res) {
     page: page ? Number(page) : undefined,
     limit: limit ? Number(limit) : undefined,
     sort,
+    requesterId: req.user.id,
+    requesterRole: req.user.role,
   });
 
   res.json(result);

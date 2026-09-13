@@ -1,6 +1,6 @@
 import { Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts'
 
-const COLORS = ['#2563eb', '#16a34a', '#d97706', '#7c3aed', '#64748b']
+const COLORS = ['#7c3aed', '#16a34a', '#d97706', '#0ea5e9', '#64748b']
 
 const LABELS = {
   development: 'Development',

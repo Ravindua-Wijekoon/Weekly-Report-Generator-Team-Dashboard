@@ -20,6 +20,14 @@ const TaskItemSchema = new Schema(
   { _id: true }
 );
 
+const PlannedTaskSchema = new Schema(
+  {
+    task: { type: String, required: true, trim: true },
+    description: { type: String, trim: true },
+  },
+  { _id: true }
+);
+
 const ListItemSchema = new Schema(
   {
     text: { type: String, required: true, trim: true },
@@ -42,7 +50,7 @@ const HoursByTypeSchema = new Schema(
 const ReportContentSchema = new Schema(
   {
     tasksCompleted: { type: [TaskItemSchema], default: [] },
-    tasksPlannedNextWeek: { type: [{ text: String }], default: [] },
+    tasksPlannedNextWeek: { type: [PlannedTaskSchema], default: [] },
     blockers: { type: [ListItemSchema], default: [] },
     achievements: { type: [ListItemSchema], default: [] },
     hoursByType: { type: HoursByTypeSchema, default: () => ({}) },
@@ -109,7 +117,7 @@ const ReportSchema = new Schema(
   { timestamps: true }
 );
 
-ReportSchema.index({ owner: 1, weekLabel: 1 }, { unique: true });
+ReportSchema.index({ owner: 1, weekLabel: 1, project: 1 }, { unique: true });
 ReportSchema.index({ project: 1, weekStart: 1 });
 ReportSchema.index({ status: 1, weekStart: 1 });
 

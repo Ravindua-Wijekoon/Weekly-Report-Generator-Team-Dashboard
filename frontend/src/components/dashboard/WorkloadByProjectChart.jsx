@@ -10,7 +10,7 @@ export function WorkloadByProjectChart({ data }) {
           <XAxis dataKey="projectName" tick={{ fontSize: 12 }} />
           <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
           <Tooltip />
-          <Bar dataKey="taskCount" fill="#2563eb" name="Tasks" />
+          <Bar dataKey="taskCount" fill="#7c3aed" name="Tasks" />
         </BarChart>
       </ResponsiveContainer>
     </div>

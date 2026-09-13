@@ -1,12 +1,11 @@
 import { useState } from 'react'
 import { Pencil, Plus, Trash2 } from 'lucide-react'
 
-import { ItemFormModal } from './ItemFormModal'
+import { PlannedTaskFormModal } from './PlannedTaskFormModal'
 import { Button } from '../common/Button'
-import { StatusBadge } from '../common/StatusBadge'
 import { ConfirmDialog } from '../common/ConfirmDialog'
 
-export function ListEditor({ items, onChange, withKeyFlag = false, keyLabel, addLabel = 'Add item' }) {
+export function PlannedTaskList({ items, onChange }) {
   const [modalState, setModalState] = useState(null)
   const [deleteIndex, setDeleteIndex] = useState(null)
 
@@ -24,38 +23,33 @@ export function ListEditor({ items, onChange, withKeyFlag = false, keyLabel, add
   }
 
   function handleSave(item) {
-    let nextItems =
-      modalState.index === null
-        ? [...items, item]
-        : items.map((existing, i) => (i === modalState.index ? item : existing))
-
-    if (item.isKey) {
-      nextItems = nextItems.map((existing) => (existing === item ? existing : { ...existing, isKey: false }))
+    if (modalState.index === null) {
+      onChange([...items, item])
+    } else {
+      onChange(items.map((existing, i) => (i === modalState.index ? item : existing)))
     }
-
-    onChange(nextItems)
     setModalState(null)
   }
 
   return (
     <div className="space-y-2">
-      {items.length === 0 && <p className="text-sm text-slate-400">Nothing added yet.</p>}
+      {items.length === 0 && <p className="text-sm text-slate-400">Nothing planned yet.</p>}
 
       {items.map((item, index) => (
         <div
           key={item._id || index}
           className="flex items-start justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50/50 p-3"
         >
-          <div className="flex items-start gap-2 min-w-0">
-            <span className="text-sm text-slate-700 whitespace-pre-wrap">{item.text}</span>
-            {withKeyFlag && item.isKey && <StatusBadge tone="warning">Key</StatusBadge>}
+          <div className="min-w-0">
+            <p className="text-sm font-medium text-slate-800">{item.task}</p>
+            {item.description && <p className="text-sm text-slate-500 mt-0.5">{item.description}</p>}
           </div>
           <div className="flex items-center gap-2 shrink-0">
             <button
               type="button"
               onClick={() => handleEdit(index)}
               className="text-slate-400 hover:text-primary-600"
-              aria-label="Edit item"
+              aria-label="Edit planned task"
             >
               <Pencil size={16} />
             </button>
@@ -63,7 +57,7 @@ export function ListEditor({ items, onChange, withKeyFlag = false, keyLabel, add
               type="button"
               onClick={() => setDeleteIndex(index)}
               className="text-slate-400 hover:text-danger"
-              aria-label="Remove item"
+              aria-label="Remove planned task"
             >
               <Trash2 size={16} />
             </button>
@@ -73,15 +67,12 @@ export function ListEditor({ items, onChange, withKeyFlag = false, keyLabel, add
 
       <Button type="button" variant="outline" onClick={handleAdd} className="px-3 py-1.5 flex items-center gap-1.5">
         <Plus size={16} />
-        {addLabel}
+        Add task
       </Button>
 
       {modalState && (
-        <ItemFormModal
-          title={modalState.index !== null ? 'Edit item' : addLabel}
+        <PlannedTaskFormModal
           initialItem={modalState.index !== null ? items[modalState.index] : null}
-          withKeyFlag={withKeyFlag}
-          keyLabel={keyLabel}
           onSave={handleSave}
           onClose={() => setModalState(null)}
         />
@@ -89,8 +80,8 @@ export function ListEditor({ items, onChange, withKeyFlag = false, keyLabel, add
 
       {deleteIndex !== null && (
         <ConfirmDialog
-          title="Remove item"
-          message="Are you sure you want to remove this item? This cannot be undone."
+          title="Remove planned task"
+          message="Are you sure you want to remove this planned task? This cannot be undone."
           onConfirm={confirmRemove}
           onCancel={() => setDeleteIndex(null)}
         />

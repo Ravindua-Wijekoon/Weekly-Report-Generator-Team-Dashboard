@@ -9,7 +9,11 @@ async function getSummary(weekInput) {
   const members = await User.find({ role: 'member', isActive: true }).select('_id');
   const memberIds = members.map((member) => member._id.toString());
 
-  const reportByOwner = new Map(reports.map((report) => [report.owner.toString(), report]));
+  const submittedOwnerIds = new Set(
+    reports
+      .filter((report) => ['submitted', 'needs_correction', 'approved'].includes(report.status))
+      .map((report) => report.owner.toString())
+  );
 
   let submitted = 0;
   let pending = 0;
@@ -17,10 +21,7 @@ async function getSummary(weekInput) {
   const isPastWeek = weekEnd < new Date();
 
   for (const memberId of memberIds) {
-    const report = reportByOwner.get(memberId);
-    const hasSubmitted = report && ['submitted', 'needs_correction', 'approved'].includes(report.status);
-
-    if (hasSubmitted) {
+    if (submittedOwnerIds.has(memberId)) {
       submitted += 1;
     } else if (isPastWeek) {
       late += 1;
@@ -75,19 +76,25 @@ async function getStatusByMember(weekInput) {
     .select('owner status project')
     .populate('project', 'name');
 
-  const reportByOwner = new Map(reports.map((report) => [report.owner.toString(), report]));
+  const reportsByOwner = new Map();
+  for (const report of reports) {
+    const key = report.owner.toString();
+    if (!reportsByOwner.has(key)) {
+      reportsByOwner.set(key, []);
+    }
+    reportsByOwner.get(key).push({
+      reportId: report._id,
+      status: report.status,
+      project: report.project,
+    });
+  }
 
-  return members.map((member) => {
-    const report = reportByOwner.get(member._id.toString());
-    return {
-      userId: member._id,
-      name: member.name,
-      email: member.email,
-      status: report ? report.status : 'not_started',
-      reportId: report ? report._id : null,
-      project: report ? report.project : null,
-    };
-  });
+  return members.map((member) => ({
+    userId: member._id,
+    name: member.name,
+    email: member.email,
+    reports: reportsByOwner.get(member._id.toString()) || [],
+  }));
 }
 
 async function getWorkloadByProject(weekInput) {

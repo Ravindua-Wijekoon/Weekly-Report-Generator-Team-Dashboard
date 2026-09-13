@@ -53,7 +53,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-violet-50/60 px-4">
       <div className="w-full max-w-sm bg-white rounded-lg shadow p-6">
         <h1 className="text-xl font-semibold text-slate-800 mb-4">Log in</h1>
 

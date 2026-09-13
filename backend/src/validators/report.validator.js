@@ -13,6 +13,11 @@ const taskItemSchema = z.object({
   output: z.string().trim().optional(),
 });
 
+const plannedTaskSchema = z.object({
+  task: z.string().trim().min(1, 'Task is required'),
+  description: z.string().trim().optional(),
+});
+
 const listItemSchema = z.object({
   text: z.string().trim().min(1, 'Text is required'),
   isKey: z.boolean().optional().default(false),
@@ -28,7 +33,7 @@ const hoursByTypeSchema = z.object({
 
 const reportContentSchema = z.object({
   tasksCompleted: z.array(taskItemSchema).default([]),
-  tasksPlannedNextWeek: z.array(z.object({ text: z.string().trim().min(1) })).default([]),
+  tasksPlannedNextWeek: z.array(plannedTaskSchema).default([]),
   blockers: z.array(listItemSchema).default([]),
   achievements: z.array(listItemSchema).default([]),
   hoursByType: hoursByTypeSchema.optional(),

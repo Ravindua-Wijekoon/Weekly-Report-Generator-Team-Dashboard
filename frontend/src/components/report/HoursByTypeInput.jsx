@@ -22,6 +22,7 @@ export function HoursByTypeInput({ value, onChange }) {
             className="w-full rounded border border-slate-300 px-2 py-1 text-sm"
             value={value?.[key] ?? 0}
             onChange={(event) => updateField(key, Number(event.target.value))}
+            onFocus={(event) => event.target.select()}
           />
         </div>
       ))}

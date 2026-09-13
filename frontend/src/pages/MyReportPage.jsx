@@ -1,12 +1,15 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 
 import { useCreateReport, useReports, useSubmitReport, useUpdateReport } from '../hooks/useReports'
 import { useProjects } from '../hooks/useProjects'
 import { getWeekStart, getWeekEnd, toISODateString, formatWeekRange } from '../lib/week'
 import { ReportForm } from '../components/report/ReportForm'
+import { ProjectTabs } from '../components/report/ProjectTabs'
+import { Card } from '../components/common/Card'
 import { Button } from '../components/common/Button'
 import { StatusBadge } from '../components/common/StatusBadge'
+import { WeekNavigator } from '../components/common/WeekNavigator'
 
 const STATUS_TONES = {
   draft: 'neutral',
@@ -33,6 +36,8 @@ export default function MyReportPage() {
   const weekEnd = getWeekEnd(weekStart)
   const weekStartParam = toISODateString(weekStart)
 
+  const [selectedProjectId, setSelectedProjectId] = useState(null)
+
   const { data: projects = [] } = useProjects({ isActive: true })
   const { data: reportsData, isLoading } = useReports({
     weekStart: weekStartParam,
@@ -43,8 +48,25 @@ export default function MyReportPage() {
   const updateReport = useUpdateReport()
   const submitReport = useSubmitReport()
 
-  const existingReport = reportsData?.data?.[0]
-  const isEditable = existingReport ? EDITABLE_STATUSES.includes(existingReport.status) : false
+  const weekReports = reportsData?.data || []
+
+  useEffect(() => {
+    setSelectedProjectId(null)
+  }, [weekStartParam])
+
+  useEffect(() => {
+    if (weekReports.length === 0) return
+    const stillValid = weekReports.some((report) => (report.project?._id || report.project) === selectedProjectId)
+    if (!selectedProjectId || !stillValid) {
+      setSelectedProjectId(weekReports[0].project?._id || weekReports[0].project)
+    }
+  }, [weekReports, selectedProjectId])
+
+  const selectedReport = weekReports.find((report) => (report.project?._id || report.project) === selectedProjectId)
+  const isEditable = selectedReport ? EDITABLE_STATUSES.includes(selectedReport.status) : false
+
+  const startedProjectIds = new Set(weekReports.map((report) => report.project?._id || report.project))
+  const availableProjects = projects.filter((project) => !startedProjectIds.has(project._id))
 
   function goToWeek(date) {
     setSearchParams({ week: toISODateString(date) })
@@ -64,65 +86,64 @@ export default function MyReportPage() {
 
   async function handleCreate(projectId) {
     await createReport.mutateAsync({ project: projectId, weekStart: weekStartParam })
+    setSelectedProjectId(projectId)
   }
 
   async function handleSave(payload) {
-    await updateReport.mutateAsync({ id: existingReport._id, payload })
+    await updateReport.mutateAsync({ id: selectedReport._id, payload })
   }
 
   async function handleSubmit() {
-    await submitReport.mutateAsync(existingReport._id)
+    await submitReport.mutateAsync(selectedReport._id)
   }
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-xl font-semibold text-slate-800">My weekly report</h1>
-        <div className="flex items-center gap-3 text-sm">
-          <button type="button" onClick={goToPreviousWeek} className="text-primary-600 hover:underline">
-            Previous week
-          </button>
-          <span className="text-slate-500">{formatWeekRange(weekStart, weekEnd)}</span>
-          <button type="button" onClick={goToNextWeek} className="text-primary-600 hover:underline">
-            Next week
-          </button>
-        </div>
+      <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
+        <h1 className="font-serif text-2xl text-slate-900">My weekly report</h1>
+        <WeekNavigator label={formatWeekRange(weekStart, weekEnd)} onPrevious={goToPreviousWeek} onNext={goToNextWeek} />
       </div>
 
       {isLoading && <p className="text-slate-500 text-sm">Loading...</p>}
 
-      {!isLoading && !existingReport && (
+      {!isLoading && weekReports.length > 0 && (
+        <ProjectTabs
+          reports={weekReports}
+          selectedProjectId={selectedProjectId}
+          onSelect={setSelectedProjectId}
+          availableProjects={availableProjects}
+          onAddProject={handleCreate}
+        />
+      )}
+
+      {!isLoading && weekReports.length === 0 && (
         <StartReportPanel projects={projects} onCreate={handleCreate} isSubmitting={createReport.isPending} />
       )}
 
-      {!isLoading && existingReport && isEditable && (
+      {!isLoading && selectedReport && isEditable && (
         <ReportForm
-          key={existingReport._id}
-          report={existingReport}
-          projects={projects}
+          key={selectedReport._id}
+          report={selectedReport}
           onSave={handleSave}
-          isSaving={updateReport.isPending}
           onSubmit={handleSubmit}
           isSubmitting={submitReport.isPending}
         />
       )}
 
-      {!isLoading && existingReport && !isEditable && (
-        <div className="bg-white rounded-lg shadow p-6 flex items-center justify-between">
+      {!isLoading && selectedReport && !isEditable && (
+        <Card className="flex items-center justify-between flex-wrap gap-3">
           <div>
-            <p className="text-slate-600">
-              This week's report is no longer editable here.
-            </p>
+            <p className="text-slate-600">This report is no longer editable here.</p>
             <div className="mt-2">
-              <StatusBadge tone={STATUS_TONES[existingReport.status]}>
-                {STATUS_LABELS[existingReport.status]}
+              <StatusBadge tone={STATUS_TONES[selectedReport.status]}>
+                {STATUS_LABELS[selectedReport.status]}
               </StatusBadge>
             </div>
           </div>
-          <Link to={`/reports/${existingReport._id}`} className="text-primary-600 hover:underline text-sm">
+          <Link to={`/reports/${selectedReport._id}`} className="text-primary-600 hover:underline text-sm">
             View report
           </Link>
-        </div>
+        </Card>
       )}
     </div>
   )
@@ -143,7 +164,7 @@ function StartReportPanel({ projects, onCreate, isSubmitting }) {
   }
 
   return (
-    <div className="bg-white rounded-lg shadow p-6">
+    <Card>
       <p className="text-slate-600 mb-4">No report yet for this week. Choose a project to start one.</p>
       <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3 sm:items-end">
         <div className="flex-1">
@@ -169,6 +190,6 @@ function StartReportPanel({ projects, onCreate, isSubmitting }) {
           {isSubmitting ? 'Starting...' : "Start this week's report"}
         </Button>
       </form>
-    </div>
+    </Card>
   )
 }
