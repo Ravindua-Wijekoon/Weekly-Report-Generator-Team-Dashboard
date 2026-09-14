@@ -5,10 +5,11 @@ const env = require('../config/env');
 const COOKIE_NAME = 'token';
 
 function setAuthCookie(res, token) {
+  const isProduction = env.nodeEnv === 'production';
   res.cookie(COOKIE_NAME, token, {
     httpOnly: true,
-    secure: env.nodeEnv === 'production',
-    sameSite: 'lax',
+    secure: isProduction,
+    sameSite: isProduction ? 'none' : 'lax',
     maxAge: 7 * 24 * 60 * 60 * 1000,
   });
 }
@@ -38,7 +39,12 @@ async function login(req, res) {
 }
 
 function logout(req, res) {
-  res.clearCookie(COOKIE_NAME);
+  const isProduction = env.nodeEnv === 'production';
+  res.clearCookie(COOKIE_NAME, {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: isProduction ? 'none' : 'lax',
+  });
   res.status(204).send();
 }
 
