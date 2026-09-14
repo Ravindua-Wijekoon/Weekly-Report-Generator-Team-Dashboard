@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 
 import { useCreateReport, useReports, useSubmitReport, useUpdateReport } from '../hooks/useReports'
 import { useProjects } from '../hooks/useProjects'
+import { useAuth } from '../context/AuthContext'
 import { getWeekStart, getWeekEnd, toISODateString, formatWeekRange } from '../lib/week'
 import { ReportForm } from '../components/report/ReportForm'
 import { ProjectTabs } from '../components/report/ProjectTabs'
@@ -28,6 +29,7 @@ const STATUS_LABELS = {
 const EDITABLE_STATUSES = ['draft', 'needs_correction']
 
 export default function MyReportPage() {
+  const { user } = useAuth()
   const [searchParams, setSearchParams] = useSearchParams()
   const weekParam = searchParams.get('week')
   const anchorDate = weekParam ? new Date(weekParam) : new Date()
@@ -38,7 +40,7 @@ export default function MyReportPage() {
 
   const [selectedProjectId, setSelectedProjectId] = useState(null)
 
-  const { data: projects = [] } = useProjects({ isActive: true })
+  const { data: projects = [] } = useProjects({ isActive: true, mine: user?.role !== 'manager' })
   const { data: reportsData, isLoading } = useReports({
     weekStart: weekStartParam,
     weekEnd: weekStartParam,

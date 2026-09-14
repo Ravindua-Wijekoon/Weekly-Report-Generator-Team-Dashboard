@@ -27,7 +27,7 @@ async function list(req, res) {
 }
 
 async function create(req, res) {
-  const report = await reportService.createDraft({ owner: req.user.id, ...req.body });
+  const report = await reportService.createDraft({ owner: req.user.id, requesterRole: req.user.role, ...req.body });
   res.status(201).json({ report });
 }
 
@@ -36,7 +36,7 @@ function getOne(req, res) {
 }
 
 async function update(req, res) {
-  const report = await reportService.updateContent(req.report, req.body);
+  const report = await reportService.updateContent(req.report, req.body, req.user.role);
   res.json({ report });
 }
 

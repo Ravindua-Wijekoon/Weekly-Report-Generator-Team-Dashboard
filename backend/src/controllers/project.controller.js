@@ -10,6 +10,7 @@ function parseBooleanQuery(value) {
 async function list(req, res) {
   const projects = await projectService.listProjects({
     isActive: parseBooleanQuery(req.query.isActive),
+    memberId: req.query.mine === 'true' ? req.user.id : undefined,
   });
   res.json({ data: projects });
 }

@@ -1,5 +1,14 @@
 import { NavLink } from 'react-router-dom'
-import { FileText, FolderKanban, History, Home, Inbox, LayoutDashboard, Users as UsersIcon } from 'lucide-react'
+import {
+  FileText,
+  FolderKanban,
+  History,
+  Home,
+  Inbox,
+  LayoutDashboard,
+  Sparkles,
+  Users as UsersIcon,
+} from 'lucide-react'
 
 import { useAuth } from '../../context/AuthContext'
 import { Avatar } from '../common/Avatar'
@@ -16,6 +25,7 @@ const MANAGER_NAV_ITEMS = [
   { to: '/reviews', label: 'Review queue', icon: Inbox },
   { to: '/projects', label: 'Projects', icon: FolderKanban },
   { to: '/users', label: 'Users', icon: UsersIcon },
+  { to: '/assistant', label: 'AI Assistant', icon: Sparkles },
 ]
 
 function NavItem({ to, label, icon: Icon, end }) {

@@ -23,3 +23,60 @@
 body {
   margin: 0;
 }
+
+.chat-markdown p {
+  margin: 0 0 0.5em;
+}
+
+.chat-markdown p:last-child {
+  margin-bottom: 0;
+}
+
+.chat-markdown strong {
+  font-weight: 600;
+}
+
+.chat-markdown ul,
+.chat-markdown ol {
+  margin: 0.25em 0 0.5em;
+  padding-left: 1.25em;
+}
+
+.chat-markdown ul {
+  list-style: disc;
+}
+
+.chat-markdown ol {
+  list-style: decimal;
+}
+
+.chat-markdown li {
+  margin: 0.15em 0;
+}
+
+.chat-markdown h1,
+.chat-markdown h2,
+.chat-markdown h3 {
+  font-weight: 600;
+  margin: 0.6em 0 0.3em;
+}
+
+.chat-markdown h1:first-child,
+.chat-markdown h2:first-child,
+.chat-markdown h3:first-child {
+  margin-top: 0;
+}
+
+.chat-markdown hr {
+  border: none;
+  border-top: 1px solid currentColor;
+  opacity: 0.15;
+  margin: 0.6em 0;
+}
+
+.chat-markdown code {
+  background: rgba(0, 0, 0, 0.06);
+  padding: 0.1em 0.35em;
+  border-radius: 0.25em;
+  font-size: 0.85em;
+}

@@ -20,6 +20,6 @@ export function toISODateString(date) {
 }
 
 export function formatWeekRange(weekStart, weekEnd) {
-  const options = { month: 'short', day: 'numeric' }
+  const options = { month: 'short', day: 'numeric', timeZone: 'UTC' }
   return `${weekStart.toLocaleDateString(undefined, options)} - ${weekEnd.toLocaleDateString(undefined, options)}`
 }

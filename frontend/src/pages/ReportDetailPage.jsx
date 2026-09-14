@@ -1,4 +1,6 @@
+import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import { History } from 'lucide-react'
 
 import { useReport, useReviewReport } from '../hooks/useReports'
 import { useAuth } from '../context/AuthContext'
@@ -6,6 +8,7 @@ import { toISODateString } from '../lib/week'
 import { ReportContentView } from '../components/report/ReportContentView'
 import { ReviewActionPanel } from '../components/report/ReviewActionPanel'
 import { VersionHistoryPanel } from '../components/report/VersionHistoryPanel'
+import { Button } from '../components/common/Button'
 
 const EDITABLE_STATUSES = ['draft', 'needs_correction']
 
@@ -14,6 +17,7 @@ export default function ReportDetailPage() {
   const { user } = useAuth()
   const { data: report, isLoading, error } = useReport(id)
   const reviewReport = useReviewReport()
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false)
 
   if (isLoading) {
     return <p className="text-slate-500 text-sm">Loading...</p>
@@ -52,7 +56,15 @@ export default function ReportDetailPage() {
           </Link>
         </div>
       )}
-      <ReportContentView report={report} />
+      <ReportContentView
+        report={report}
+        headerAction={
+          <Button variant="outline" className="px-3 py-1 flex items-center gap-1.5" onClick={() => setIsHistoryOpen(true)}>
+            <History size={14} />
+            View history
+          </Button>
+        }
+      />
       {canReview && (
         <ReviewActionPanel
           onApprove={handleApprove}
@@ -60,7 +72,7 @@ export default function ReportDetailPage() {
           isSubmitting={reviewReport.isPending}
         />
       )}
-      <VersionHistoryPanel reportId={id} />
+      <VersionHistoryPanel reportId={id} isOpen={isHistoryOpen} onClose={() => setIsHistoryOpen(false)} />
     </div>
   )
 }

@@ -35,7 +35,7 @@ async function create(req, res) {
 }
 
 async function update(req, res) {
-  const user = await userService.updateUser(req.params.id, req.body);
+  const user = await userService.updateUser(req.params.id, req.body, req.user.id);
   res.json({ user: toPublicUser(user) });
 }
 

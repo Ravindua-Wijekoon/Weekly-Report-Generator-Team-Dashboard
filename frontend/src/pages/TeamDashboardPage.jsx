@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import { Sparkles } from 'lucide-react'
 
 import {
   useActivity,
@@ -22,6 +23,7 @@ import { StatusBadge } from '../components/common/StatusBadge'
 import { SegmentedControl } from '../components/common/SegmentedControl'
 import { Card } from '../components/common/Card'
 import { WeekNavigator } from '../components/common/WeekNavigator'
+import { Button } from '../components/common/Button'
 
 const STATUS_FILTER_OPTIONS = [
   { value: '', label: 'All' },
@@ -49,6 +51,7 @@ const STATUS_LABELS = {
 }
 
 export default function TeamDashboardPage() {
+  const navigate = useNavigate()
   const [anchorDate, setAnchorDate] = useState(() => new Date())
   const [memberFilter, setMemberFilter] = useState('')
   const [projectFilter, setProjectFilter] = useState('')
@@ -78,6 +81,12 @@ export default function TeamDashboardPage() {
     setAnchorDate(next)
   }
 
+  function handleGenerateSummary() {
+    navigate('/assistant', {
+      state: { prompt: `Summarize the team's activity for the week of ${formatWeekRange(weekStart, weekEnd)}.` },
+    })
+  }
+
   const memberRows = statusByMember.flatMap((member) => {
     if (member.reports.length === 0) {
       return [{ key: member.userId, userId: member.userId, name: member.name, status: 'not_started', project: null, reportId: null }]
@@ -101,23 +110,18 @@ export default function TeamDashboardPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <h1 className="font-serif text-2xl text-slate-900">Team dashboard</h1>
-        <WeekNavigator label={formatWeekRange(weekStart, weekEnd)} onPrevious={goToPreviousWeek} onNext={goToNextWeek} />
+        <div className="flex items-center gap-3">
+          <Button variant="outline" className="px-3 py-1.5 flex items-center gap-1.5" onClick={handleGenerateSummary}>
+            <Sparkles size={14} />
+            Generate summary
+          </Button>
+          <WeekNavigator label={formatWeekRange(weekStart, weekEnd)} onPrevious={goToPreviousWeek} onNext={goToNextWeek} />
+        </div>
       </div>
 
       <SummaryCards summary={summary} />
-
-      <div className="grid sm:grid-cols-2 gap-4">
-        <TrendChart data={trend} />
-        <StatusByMemberChart members={memberRows} />
-        <WorkloadByProjectChart data={workload} />
-        <HoursByTypeChart hours={hoursByType} />
-      </div>
-
-      <ActivityFeed items={activity} />
-
-      <SectionAcrossTeam week={weekParam} />
 
       <Card>
         <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
@@ -192,6 +196,17 @@ export default function TeamDashboardPage() {
           </table>
         )}
       </Card>
+
+      <div className="grid sm:grid-cols-2 gap-4">
+        <TrendChart data={trend} />
+        <StatusByMemberChart members={memberRows} />
+        <WorkloadByProjectChart data={workload} />
+        <HoursByTypeChart hours={hoursByType} />
+      </div>
+
+      <ActivityFeed items={activity} />
+
+      <SectionAcrossTeam week={weekParam} />
     </div>
   )
 }

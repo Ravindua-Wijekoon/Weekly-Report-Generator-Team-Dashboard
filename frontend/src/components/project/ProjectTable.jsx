@@ -1,86 +1,8 @@
-import { useState } from 'react'
+import { Pencil } from 'lucide-react'
 
-import { FormField } from '../common/FormField'
-import { Button } from '../common/Button'
 import { StatusBadge } from '../common/StatusBadge'
 
-function ProjectRow({ project, onUpdate, onToggleActive, isUpdating }) {
-  const [isEditing, setIsEditing] = useState(false)
-  const [form, setForm] = useState({ name: project.name, description: project.description || '' })
-
-  function updateField(field) {
-    return (event) => setForm((prev) => ({ ...prev, [field]: event.target.value }))
-  }
-
-  async function handleSave() {
-    await onUpdate(project._id, form)
-    setIsEditing(false)
-  }
-
-  if (isEditing) {
-    return (
-      <tr className="border-t border-slate-200">
-        <td className="py-2 pr-4">
-          <FormField id={`name-${project._id}`} value={form.name} onChange={updateField('name')} />
-        </td>
-        <td className="py-2 pr-4">
-          <FormField
-            id={`description-${project._id}`}
-            value={form.description}
-            onChange={updateField('description')}
-          />
-        </td>
-        <td className="py-2 pr-4">
-          <StatusBadge tone={project.isActive ? 'success' : 'neutral'}>
-            {project.isActive ? 'Active' : 'Inactive'}
-          </StatusBadge>
-        </td>
-        <td className="py-2 pr-4 space-x-2 whitespace-nowrap">
-          <Button className="px-3 py-1" onClick={handleSave} disabled={isUpdating}>
-            Save
-          </Button>
-          <button
-            type="button"
-            className="text-sm text-slate-500 hover:text-slate-700"
-            onClick={() => setIsEditing(false)}
-          >
-            Cancel
-          </button>
-        </td>
-      </tr>
-    )
-  }
-
-  return (
-    <tr className="border-t border-slate-200">
-      <td className="py-2 pr-4 text-slate-800">{project.name}</td>
-      <td className="py-2 pr-4 text-slate-500">{project.description || '-'}</td>
-      <td className="py-2 pr-4">
-        <StatusBadge tone={project.isActive ? 'success' : 'neutral'}>
-          {project.isActive ? 'Active' : 'Inactive'}
-        </StatusBadge>
-      </td>
-      <td className="py-2 pr-4 space-x-3 whitespace-nowrap">
-        <button
-          type="button"
-          className="text-sm text-primary-600 hover:underline"
-          onClick={() => setIsEditing(true)}
-        >
-          Edit
-        </button>
-        <button
-          type="button"
-          className="text-sm text-slate-500 hover:underline"
-          onClick={() => onToggleActive(project)}
-        >
-          {project.isActive ? 'Deactivate' : 'Reactivate'}
-        </button>
-      </td>
-    </tr>
-  )
-}
-
-export function ProjectTable({ projects, onUpdate, onToggleActive, isUpdating }) {
+export function ProjectTable({ projects, onEdit }) {
   if (projects.length === 0) {
     return <p className="text-slate-500 text-sm">No projects yet.</p>
   }
@@ -92,18 +14,34 @@ export function ProjectTable({ projects, onUpdate, onToggleActive, isUpdating })
           <th className="py-2 pr-4 font-medium">Name</th>
           <th className="py-2 pr-4 font-medium">Description</th>
           <th className="py-2 pr-4 font-medium">Status</th>
-          <th className="py-2 pr-4 font-medium">Actions</th>
+          <th className="py-2 pr-4 font-medium">Members</th>
+          <th className="py-2 pr-4 font-medium" />
         </tr>
       </thead>
       <tbody>
         {projects.map((project) => (
-          <ProjectRow
-            key={project._id}
-            project={project}
-            onUpdate={onUpdate}
-            onToggleActive={onToggleActive}
-            isUpdating={isUpdating}
-          />
+          <tr key={project._id} className="border-t border-slate-200">
+            <td className="py-2 pr-4 text-slate-800">{project.name}</td>
+            <td className="py-2 pr-4 text-slate-500">{project.description || '-'}</td>
+            <td className="py-2 pr-4">
+              <StatusBadge tone={project.isActive ? 'success' : 'neutral'}>
+                {project.isActive ? 'Active' : 'Inactive'}
+              </StatusBadge>
+            </td>
+            <td className="py-2 pr-4 text-slate-500">
+              {project.members?.length > 0 ? project.members.map((member) => member.name).join(', ') : 'All members'}
+            </td>
+            <td className="py-2 pr-4">
+              <button
+                type="button"
+                className="text-slate-400 hover:text-primary-600"
+                onClick={() => onEdit(project)}
+                aria-label={`Edit ${project.name}`}
+              >
+                <Pencil size={16} />
+              </button>
+            </td>
+          </tr>
         ))}
       </tbody>
     </table>

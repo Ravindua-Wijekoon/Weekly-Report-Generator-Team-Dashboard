@@ -28,11 +28,23 @@ async function createUser({ name, email, password, role }) {
   return User.create({ name, email, passwordHash, role: role || 'member' });
 }
 
-async function updateUser(id, updates) {
+async function updateUser(id, updates, requesterId) {
   const user = await User.findById(id);
   if (!user) {
     const error = new Error('User not found');
     error.status = 404;
+    throw error;
+  }
+
+  if (user.role === 'manager' && updates.role && updates.role !== 'manager') {
+    const error = new Error("A manager's role cannot be changed");
+    error.status = 409;
+    throw error;
+  }
+
+  if (updates.isActive === false && requesterId && id === requesterId) {
+    const error = new Error('You cannot deactivate your own account');
+    error.status = 409;
     throw error;
   }
 

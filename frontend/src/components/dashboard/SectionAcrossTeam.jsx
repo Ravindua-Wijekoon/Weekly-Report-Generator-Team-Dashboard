@@ -2,13 +2,14 @@ import { useState } from 'react'
 
 import { useSection } from '../../hooks/useDashboard'
 import { StatusBadge } from '../common/StatusBadge'
+import { Card } from '../common/Card'
 
 export function SectionAcrossTeam({ week }) {
   const [section, setSection] = useState('blockers')
   const { data = [], isLoading } = useSection(week, section)
 
   return (
-    <div className="bg-white rounded-lg shadow p-4">
+    <Card>
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-sm font-semibold text-slate-700">Team view by section</h2>
         <select
@@ -45,6 +46,6 @@ export function SectionAcrossTeam({ week }) {
           </div>
         ))}
       </div>
-    </div>
+    </Card>
   )
 }

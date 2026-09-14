@@ -1,6 +1,8 @@
+import { Pencil } from 'lucide-react'
+
 import { StatusBadge } from '../common/StatusBadge'
 
-export function UserTable({ users, onUpdate, isUpdating }) {
+export function UserTable({ users, onEdit }) {
   if (users.length === 0) {
     return <p className="text-slate-500 text-sm">No users yet.</p>
   }
@@ -13,7 +15,7 @@ export function UserTable({ users, onUpdate, isUpdating }) {
           <th className="py-2 pr-4 font-medium">Email</th>
           <th className="py-2 pr-4 font-medium">Role</th>
           <th className="py-2 pr-4 font-medium">Status</th>
-          <th className="py-2 pr-4 font-medium">Actions</th>
+          <th className="py-2 pr-4 font-medium" />
         </tr>
       </thead>
       <tbody>
@@ -22,15 +24,9 @@ export function UserTable({ users, onUpdate, isUpdating }) {
             <td className="py-2 pr-4 text-slate-800">{user.name}</td>
             <td className="py-2 pr-4 text-slate-500">{user.email}</td>
             <td className="py-2 pr-4">
-              <select
-                value={user.role}
-                disabled={isUpdating}
-                onChange={(event) => onUpdate(user.id, { role: event.target.value })}
-                className="rounded border border-slate-300 px-2 py-1 text-sm"
-              >
-                <option value="member">Member</option>
-                <option value="manager">Manager</option>
-              </select>
+              <StatusBadge tone={user.role === 'manager' ? 'info' : 'neutral'}>
+                {user.role === 'manager' ? 'Manager' : 'Member'}
+              </StatusBadge>
             </td>
             <td className="py-2 pr-4">
               <StatusBadge tone={user.isActive ? 'success' : 'neutral'}>
@@ -40,11 +36,11 @@ export function UserTable({ users, onUpdate, isUpdating }) {
             <td className="py-2 pr-4">
               <button
                 type="button"
-                className="text-sm text-slate-500 hover:underline"
-                disabled={isUpdating}
-                onClick={() => onUpdate(user.id, { isActive: !user.isActive })}
+                className="text-slate-400 hover:text-primary-600"
+                onClick={() => onEdit(user)}
+                aria-label={`Edit ${user.name}`}
               >
-                {user.isActive ? 'Deactivate' : 'Reactivate'}
+                <Pencil size={16} />
               </button>
             </td>
           </tr>

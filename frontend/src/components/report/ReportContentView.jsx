@@ -17,7 +17,7 @@ const STATUS_LABELS = {
 
 const HOURS_FIELDS = ['development', 'testing', 'meetings', 'documentation', 'other']
 
-export function ReportContentView({ report }) {
+export function ReportContentView({ report, headerAction }) {
   const { content } = report
 
   return (
@@ -29,7 +29,10 @@ export function ReportContentView({ report }) {
             {report.project?.name} &middot; Week {report.weekLabel}
           </p>
         </div>
-        <StatusBadge tone={STATUS_TONES[report.status]}>{STATUS_LABELS[report.status]}</StatusBadge>
+        <div className="flex flex-col items-end gap-2">
+          <StatusBadge tone={STATUS_TONES[report.status]}>{STATUS_LABELS[report.status]}</StatusBadge>
+          {headerAction}
+        </div>
       </Card>
 
       {report.latestComment?.comment && (

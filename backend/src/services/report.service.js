@@ -1,7 +1,26 @@
 const Report = require('../models/Report');
+const Project = require('../models/Project');
 const { resolveWeek } = require('../utils/isoWeek');
 
-async function createDraft({ owner, project, weekStart: weekStartInput }) {
+async function assertProjectAccessible(projectId, userId) {
+  const project = await Project.findById(projectId).select('members');
+  if (!project) {
+    const error = new Error('Project not found');
+    error.status = 404;
+    throw error;
+  }
+  if (project.members.length > 0 && !project.members.some((memberId) => memberId.toString() === userId)) {
+    const error = new Error('You are not assigned to this project');
+    error.status = 403;
+    throw error;
+  }
+}
+
+async function createDraft({ owner, project, weekStart: weekStartInput, requesterRole }) {
+  if (requesterRole !== 'manager') {
+    await assertProjectAccessible(project, owner);
+  }
+
   const { weekStart, weekEnd, weekLabel } = resolveWeek(weekStartInput);
 
   const existing = await Report.findOne({ owner, weekLabel, project });
@@ -71,7 +90,7 @@ async function listReports({
   };
 }
 
-async function updateContent(report, updates) {
+async function updateContent(report, updates, requesterRole) {
   if (!['draft', 'needs_correction'].includes(report.status)) {
     const error = new Error('Report cannot be edited in its current status');
     error.status = 409;
@@ -80,6 +99,10 @@ async function updateContent(report, updates) {
 
   const currentProjectId = (report.project._id || report.project).toString();
   if (updates.project && updates.project !== currentProjectId) {
+    if (requesterRole !== 'manager') {
+      const ownerId = (report.owner._id || report.owner).toString();
+      await assertProjectAccessible(updates.project, ownerId);
+    }
     const existing = await Report.findOne({
       owner: report.owner,
       weekLabel: report.weekLabel,

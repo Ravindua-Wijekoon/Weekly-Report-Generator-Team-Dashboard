@@ -8,6 +8,7 @@ import {
   Inbox,
   LayoutDashboard,
   MoreHorizontal,
+  Sparkles,
   Users as UsersIcon,
   X,
 } from 'lucide-react'
@@ -25,6 +26,7 @@ const MORE_ITEMS = [
   { to: '/reviews', label: 'Review queue', icon: Inbox },
   { to: '/projects', label: 'Projects', icon: FolderKanban },
   { to: '/users', label: 'Users', icon: UsersIcon },
+  { to: '/assistant', label: 'AI Assistant', icon: Sparkles },
 ]
 
 export function MobileTabBar() {

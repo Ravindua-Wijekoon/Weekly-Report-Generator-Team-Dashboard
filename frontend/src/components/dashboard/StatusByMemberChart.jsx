@@ -1,5 +1,8 @@
 import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 
+import { Card } from '../common/Card'
+import { chartAxisTick, chartGridStroke, chartTooltipProps } from '../../lib/chartTheme'
+
 const STATUS_COLORS = {
   not_started: '#cbd5e1',
   draft: '#64748b',
@@ -24,21 +27,30 @@ export function StatusByMemberChart({ members }) {
   }))
 
   return (
-    <div className="bg-white rounded-lg shadow p-4">
+    <Card>
       <h2 className="text-sm font-semibold text-slate-700 mb-3">Status by team member</h2>
       <ResponsiveContainer width="100%" height={240}>
-        <BarChart data={counts}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-          <XAxis dataKey="label" tick={{ fontSize: 11 }} interval={0} angle={-15} textAnchor="end" height={50} />
-          <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
-          <Tooltip />
-          <Bar dataKey="count">
+        <BarChart data={counts} margin={{ top: 8, right: 8, left: -16, bottom: 0 }} barCategoryGap="30%">
+          <CartesianGrid strokeDasharray="3 3" stroke={chartGridStroke} vertical={false} />
+          <XAxis
+            dataKey="label"
+            tick={chartAxisTick}
+            axisLine={false}
+            tickLine={false}
+            interval={0}
+            angle={-15}
+            textAnchor="end"
+            height={50}
+          />
+          <YAxis allowDecimals={false} tick={chartAxisTick} axisLine={false} tickLine={false} />
+          <Tooltip {...chartTooltipProps} />
+          <Bar dataKey="count" radius={[8, 8, 0, 0]} maxBarSize={48}>
             {counts.map((entry) => (
               <Cell key={entry.status} fill={STATUS_COLORS[entry.status]} />
             ))}
           </Bar>
         </BarChart>
       </ResponsiveContainer>
-    </div>
+    </Card>
   )
 }

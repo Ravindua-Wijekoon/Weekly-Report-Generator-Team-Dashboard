@@ -1,5 +1,8 @@
 import { Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts'
 
+import { Card } from '../common/Card'
+import { chartTooltipProps } from '../../lib/chartTheme'
+
 const COLORS = ['#7c3aed', '#16a34a', '#d97706', '#0ea5e9', '#64748b']
 
 const LABELS = {
@@ -16,23 +19,32 @@ export function HoursByTypeChart({ hours }) {
     .filter((entry) => entry.value > 0)
 
   return (
-    <div className="bg-white rounded-lg shadow p-4">
+    <Card>
       <h2 className="text-sm font-semibold text-slate-700 mb-3">Time spent by task type</h2>
       {data.length === 0 ? (
         <p className="text-sm text-slate-400">No hours logged yet.</p>
       ) : (
         <ResponsiveContainer width="100%" height={240}>
           <PieChart>
-            <Pie data={data} dataKey="value" nameKey="name" outerRadius={80} label>
+            <Pie
+              data={data}
+              dataKey="value"
+              nameKey="name"
+              innerRadius={50}
+              outerRadius={82}
+              paddingAngle={3}
+              cornerRadius={6}
+              stroke="none"
+            >
               {data.map((entry, index) => (
                 <Cell key={entry.name} fill={COLORS[index % COLORS.length]} />
               ))}
             </Pie>
-            <Tooltip />
-            <Legend />
+            <Tooltip {...chartTooltipProps} />
+            <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 12 }} />
           </PieChart>
         </ResponsiveContainer>
       )}
-    </div>
+    </Card>
   )
 }

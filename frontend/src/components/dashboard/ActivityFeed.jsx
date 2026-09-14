@@ -1,8 +1,9 @@
 import { StatusBadge } from '../common/StatusBadge'
+import { Card } from '../common/Card'
 
 export function ActivityFeed({ items }) {
   return (
-    <div className="bg-white rounded-lg shadow p-4">
+    <Card>
       <h2 className="text-sm font-semibold text-slate-700 mb-3">Recent activity</h2>
       {items.length === 0 ? (
         <p className="text-sm text-slate-400">No review activity yet.</p>
@@ -26,6 +27,6 @@ export function ActivityFeed({ items }) {
           ))}
         </ul>
       )}
-    </div>
+    </Card>
   )
 }
