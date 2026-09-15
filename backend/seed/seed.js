@@ -7,10 +7,16 @@ const { connectDB } = require('../src/config/db');
 const User = require('../src/models/User');
 const Project = require('../src/models/Project');
 const Report = require('../src/models/Report');
+const Conversation = require('../src/models/Conversation');
 const authService = require('../src/services/auth.service');
 const reportService = require('../src/services/report.service');
 
 const PASSWORD = 'password123';
+
+const MANAGER_SEEDS = [
+  { name: 'Alex Manager', email: 'manager@example.com' },
+  { name: 'Priya Jayawardena', email: 'priya.manager@example.com' },
+];
 
 const MEMBER_SEEDS = [
   { name: 'Riya Perera', email: 'riya@example.com' },
@@ -20,7 +26,14 @@ const MEMBER_SEEDS = [
   { name: 'Chamodi Rathnayake', email: 'chamodi@example.com' },
 ];
 
-const PROJECT_SEEDS = ['Client A', 'Internal Tooling', 'R&D', 'Marketing'];
+const FORMER_MEMBER_SEED = { name: 'Tharindu Wickrama', email: 'tharindu@example.com' };
+
+// Riya and Nadia are the only ones allowed on the restricted project.
+const RESTRICTED_MEMBER_INDEXES = [0, 2];
+
+const OPEN_PROJECT_SEEDS = ['Client A', 'Internal Tooling', 'R&D', 'Marketing'];
+const RESTRICTED_PROJECT_NAME = 'Confidential Ops';
+const ARCHIVED_PROJECT_NAME = 'Legacy Platform';
 
 const TASK_NAMES = [
   'Implement login flow',
@@ -180,6 +193,8 @@ async function runScenario(scenario, { ownerId, projectId, weekDate, managerId }
       comment: 'Better, but the achievements still need a key highlight flagged.',
     });
   }
+
+  return report;
 }
 
 const ROTATION = [
@@ -203,6 +218,12 @@ function pickScenario(memberIndex, weekIndex, totalWeeks) {
   return ROTATION[(weekIndex + memberIndex) % ROTATION.length];
 }
 
+function weekDateFor(weeksAgo) {
+  const weekDate = new Date();
+  weekDate.setUTCDate(weekDate.getUTCDate() - weeksAgo * 7);
+  return weekDate;
+}
+
 async function seed() {
   if (env.nodeEnv === 'production') {
     throw new Error('Refusing to run the seed script against a production environment');
@@ -210,15 +231,23 @@ async function seed() {
 
   await connectDB(env.mongoUri);
 
-  await Promise.all([User.deleteMany({}), Project.deleteMany({}), Report.deleteMany({})]);
+  await Promise.all([
+    User.deleteMany({}),
+    Project.deleteMany({}),
+    Report.deleteMany({}),
+    Conversation.deleteMany({}),
+  ]);
 
   const managerPasswordHash = await authService.hashPassword(PASSWORD);
-  const manager = await User.create({
-    name: 'Alex Manager',
-    email: 'manager@example.com',
-    passwordHash: managerPasswordHash,
-    role: 'manager',
-  });
+  const managers = await User.insertMany(
+    MANAGER_SEEDS.map((manager) => ({
+      name: manager.name,
+      email: manager.email,
+      passwordHash: managerPasswordHash,
+      role: 'manager',
+    }))
+  );
+  const primaryManager = managers[0];
 
   const memberPasswordHash = await authService.hashPassword(PASSWORD);
   const members = await User.insertMany(
@@ -230,38 +259,102 @@ async function seed() {
     }))
   );
 
-  const projects = await Project.insertMany(
-    PROJECT_SEEDS.map((name) => ({ name, description: `${name} engagement`, createdBy: manager._id }))
+  const formerMember = await User.create({
+    name: FORMER_MEMBER_SEED.name,
+    email: FORMER_MEMBER_SEED.email,
+    passwordHash: memberPasswordHash,
+    role: 'member',
+  });
+
+  const openProjects = await Project.insertMany(
+    OPEN_PROJECT_SEEDS.map((name) => ({ name, description: `${name} engagement`, createdBy: primaryManager._id }))
   );
 
+  const restrictedProject = await Project.create({
+    name: RESTRICTED_PROJECT_NAME,
+    description: `${RESTRICTED_PROJECT_NAME} engagement`,
+    createdBy: primaryManager._id,
+    members: RESTRICTED_MEMBER_INDEXES.map((i) => members[i]._id),
+  });
+
+  const archivedProject = await Project.create({
+    name: ARCHIVED_PROJECT_NAME,
+    description: `${ARCHIVED_PROJECT_NAME} engagement (wound down)`,
+    createdBy: primaryManager._id,
+  });
+
+  function eligibleProjectsFor(memberIndex) {
+    if (RESTRICTED_MEMBER_INDEXES.includes(memberIndex)) {
+      return [...openProjects, restrictedProject];
+    }
+    return openProjects;
+  }
+
   const totalWeeks = 6;
-  const now = new Date();
 
   for (let weekIndex = 0; weekIndex < totalWeeks; weekIndex += 1) {
     const weeksAgo = totalWeeks - 1 - weekIndex;
-    const weekDate = new Date(now);
-    weekDate.setUTCDate(weekDate.getUTCDate() - weeksAgo * 7);
+    const weekDate = weekDateFor(weeksAgo);
 
     for (let memberIndex = 0; memberIndex < members.length; memberIndex += 1) {
       const scenario = pickScenario(memberIndex, weekIndex, totalWeeks);
-      const project = projects[(memberIndex + weekIndex) % projects.length];
+      const pool = eligibleProjectsFor(memberIndex);
+      const project = pool[(memberIndex + weekIndex) % pool.length];
 
       await runScenario(scenario, {
         ownerId: members[memberIndex]._id,
         projectId: project._id,
         weekDate,
-        managerId: manager._id,
+        managerId: primaryManager._id,
       });
     }
   }
 
+  // Historical work for a member who has since left the team. Their reports stay
+  // on record after deactivation, to exercise the "isActive" filter in user management.
+  await runScenario('approved_first_try', {
+    ownerId: formerMember._id,
+    projectId: openProjects[0]._id,
+    weekDate: weekDateFor(totalWeeks + 1),
+    managerId: primaryManager._id,
+  });
+  await runScenario('needs_correction_once', {
+    ownerId: formerMember._id,
+    projectId: openProjects[0]._id,
+    weekDate: weekDateFor(totalWeeks),
+    managerId: primaryManager._id,
+  });
+  formerMember.isActive = false;
+  await formerMember.save();
+
+  // The archived project also has history from before it was wound down, to exercise
+  // the "isActive" filter in project management and confirm dashboards handle it.
+  await runScenario('approved_first_try', {
+    ownerId: members[1]._id,
+    projectId: archivedProject._id,
+    weekDate: weekDateFor(totalWeeks + 1),
+    managerId: primaryManager._id,
+  });
+  await runScenario('approved_first_try', {
+    ownerId: members[3]._id,
+    projectId: archivedProject._id,
+    weekDate: weekDateFor(totalWeeks),
+    managerId: primaryManager._id,
+  });
+  archivedProject.isActive = false;
+  await archivedProject.save();
+
   console.log('Seed complete.');
   console.log('');
-  console.log('Manager login:');
-  console.log(`  ${manager.email} / ${PASSWORD}`);
+  console.log('Manager logins:');
+  managers.forEach((manager) => console.log(`  ${manager.email} / ${PASSWORD}`));
   console.log('');
   console.log('Member logins:');
   members.forEach((member) => console.log(`  ${member.email} / ${PASSWORD}`));
+  console.log('');
+  console.log(`Deactivated member (cannot log in): ${formerMember.email}`);
+  console.log(`Restricted project "${RESTRICTED_PROJECT_NAME}" members: ${RESTRICTED_MEMBER_INDEXES.map((i) => members[i].name).join(', ')}`);
+  console.log(`Archived project: ${ARCHIVED_PROJECT_NAME}`);
 
   await mongoose.disconnect();
 }

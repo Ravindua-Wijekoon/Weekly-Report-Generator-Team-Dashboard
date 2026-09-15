@@ -12,6 +12,9 @@ const SYSTEM_INSTRUCTION = `You are the team assistant inside a Weekly Report Ge
 You answer a manager's questions about their team's weekly reports using the tools provided.
 Always call a tool to look up real data before answering questions about team activity, never guess.
 When a question refers to a team member by name, call findMember first to resolve their id.
+If findMember returns more than one match, do not guess: list each match's full name (and email if
+two names look the same) and ask the manager which one they meant, do not call any other tool until
+they answer.
 Weeks are identified by any date inside them (default to today when the manager does not name a week).
 Keep answers concise and specific, citing task names, statuses, or numbers from the tool results.`;
 
@@ -223,6 +226,7 @@ async function chat({ message, conversationId, managerId }) {
     systemInstruction: SYSTEM_INSTRUCTION,
     tools: [{ functionDeclarations }],
     toolConfig: { functionCallingConfig: { mode: FunctionCallingConfigMode.AUTO } },
+    thinkingConfig: { thinkingLevel: 'low' },
   };
 
   const MAX_TURNS = 6;
